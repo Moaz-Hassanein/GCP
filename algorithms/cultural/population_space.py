@@ -8,7 +8,7 @@ class PopulationSpace:
     def __init__(self):
         pass
 
-random_graph = GraphGenerator("data\\sample_graphs\\graph_three")
+random_graph = GraphGenerator("data\\sample_graphs\\graph_two")
 
 def create_chromosome(n_nodes):
     chromosome = [random.randint(1, n_nodes) for _ in range(n_nodes)]
@@ -32,6 +32,8 @@ def calculate_fitness(chromosome):
                     bad_edges += 1
     return bad_edges
 
+    # [4, 4, 4, 1, 4]
+
 def selection(population):
     temp_parents = random.sample(population, 2)
     # print(f"Temp Parent one {temp_parents}")
@@ -49,3 +51,20 @@ def selection(population):
     # print("-" * 50)
     # print(parent_two)
     return parent_one, parent_two
+
+
+
+def crossover(parent_one, parent_two):
+    length = len(parent_one)
+    crosspoint = random.randint(0, length-2)
+    child = parent_one[:crosspoint+1] + parent_two[crosspoint + 1:]
+    # print(crosspoint)
+    print(calculate_fitness(parent_one))
+    print(calculate_fitness(parent_two))
+    print(calculate_fitness(child))
+    return child
+#       1  2  3  4  5
+# p1 → [1, 2, 5, 4, 3]  n = 3     point (1 → len - 1)
+# p2 → [4, 4, 4, 1, 2]
+
+#child → [1, 2, 5, 1, 2] f = 2
