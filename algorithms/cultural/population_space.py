@@ -50,8 +50,8 @@ class PopulationSpace:
         return parent_one, parent_two
 
     def crossover(self, parent_one, parent_two):
-        length = len(parent_one)
-        crosspoint = random.randint(0, length-2)
+        n = len(parent_one)
+        crosspoint = random.randint(0, n-2)
         child = parent_one[:crosspoint+1] + parent_two[crosspoint + 1:]
         # print(crosspoint)
         print(self.calculate_fitness(parent_one))
