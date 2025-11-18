@@ -1,17 +1,22 @@
 from algorithms.cultural import population_space
 from utils.graph_generator import GraphGenerator
+from algorithms.cultural.population_space import PopulationSpace
 
 
-N_NODES = population_space.random_graph.n_nodes
+popInitialize = PopulationSpace(30)
+N_NODES = popInitialize.random_graph.n_nodes
 print(N_NODES)
 
-test_chrmsm = population_space.create_chromosome(N_NODES)
-# print(test_chrmsm)
 
-test_pop = population_space.initialize_population(10)
+test_chrmsm = popInitialize.create_chromosome(N_NODES)
 
-test_fitness = population_space.calculate_fitness(test_chrmsm)
-# print(test_chrmsm)
-# print(test_fitness)
+test_pop = popInitialize.initialize_population()
 
-population_space.selection(test_pop)
+
+test_fitness = popInitialize.calculate_fitness(test_chrmsm)
+
+
+p1, p2 = popInitialize.selection(test_pop)
+
+popInitialize.crossover(p1,p2)
+

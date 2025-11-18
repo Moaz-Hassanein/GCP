@@ -6,7 +6,7 @@ from utils.graph_generator import GraphGenerator
 
 class PopulationSpace:
     def __init__(self, pop_size):
-        self.random_graph = GraphGenerator("data\\sample_graphs\\graph_three")
+        self.random_graph = GraphGenerator("data\\sample_graphs\\graph_two")
         self.pop_size = pop_size
         
     def create_chromosome(self, n_nodes):
@@ -33,20 +33,20 @@ class PopulationSpace:
 
     def selection(self, population):
         temp_parents = random.sample(population, 2)
-        # print(f"Temp Parent one {temp_parents}")
-        # print(f"First parentA fitness: {calculate_fitness(temp_parents[0])}")
-        # print(f"Second parentA fitness: {calculate_fitness(temp_parents[1])}")
+        print(f"Temp Parent one {temp_parents}")
+        print(f"First parentA fitness: {self.calculate_fitness(temp_parents[0])}")
+        print(f"Second parentA fitness: {self.calculate_fitness(temp_parents[1])}")
         parent_one = min(temp_parents, key=self.calculate_fitness)
-        # print("-" * 50)
+        print("-" * 50)
         temp_parents = random.sample(population, 2)
-        # print(f"Temp Parent two {temp_parents}")
-        # print(f"First parentB fitness: {calculate_fitness(temp_parents[0])}")
-        # print(f"Second parentB fitness: {calculate_fitness(temp_parents[1])}")
-        # print("#"*50)
+        print(f"Temp Parent two {temp_parents}")
+        print(f"First parentB fitness: {self.calculate_fitness(temp_parents[0])}")
+        print(f"Second parentB fitness: {self.calculate_fitness(temp_parents[1])}")
+        print("#"*50)
         parent_two = min(temp_parents, key=self.calculate_fitness)
-        # print(parent_one)
-        # print("-" * 50)
-        # print(parent_two)
+        print(parent_one)
+        print("-" * 50)
+        print(parent_two)
         return parent_one, parent_two
 
     def crossover(self, parent_one, parent_two):
