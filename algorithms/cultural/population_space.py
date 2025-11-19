@@ -57,5 +57,19 @@ class PopulationSpace:
         print(self.calculate_fitness(parent_one))
         print(self.calculate_fitness(parent_two))
         print(self.calculate_fitness(child))
+        print("#"*50)
         return child
 
+    def mutation(self,child,allcolors):
+        print(f"before: {child}")
+        for u, adj in self.random_graph.graph.items():
+            u_color = child[u-1]
+
+            for v in adj:
+                if (v > u):
+                    v_color = child[v-1]
+                    if u_color == v_color:
+                        new_color = random.choice(allcolors)
+                        child[v-1] = new_color
+        print(f"after: {child}")
+        print("#"*50)

@@ -18,5 +18,7 @@ test_fitness = popInitialize.calculate_fitness(test_chrmsm)
 
 p1, p2 = popInitialize.selection(test_pop)
 
-popInitialize.crossover(p1,p2)
+test_child=popInitialize.crossover(p1,p2)
 
+test_allColors=[1,2,3,4,5]
+popInitialize.mutation(test_child,test_allColors)
