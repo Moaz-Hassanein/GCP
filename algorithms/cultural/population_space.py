@@ -64,7 +64,7 @@ def crossover(parent_one, parent_two):
     print(calculate_fitness(child))
     return child
 #       1  2  3  4  5
-# p1 → [1, 2, 5, 4, 3]  n = 3     point (1 → len - 1)
-# p2 → [4, 4, 4, 1, 2]
+# p1 → [1, 2, 5, 4, 3] f = 0    n = 3     point (1 → len - 1)
+# p2 → [4, 4, 4, 1, 2] f = 3
 
 #child → [1, 2, 5, 1, 2] f = 2
