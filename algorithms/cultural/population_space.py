@@ -2,22 +2,27 @@
 # Handles individuals, crossover, and mutation.
 import random
 from utils.graph_generator import GraphGenerator
+from typing import TYPE_CHECKING, List
+if TYPE_CHECKING:
+    from algorithms.cultural.individual import Individual
 
 
 class PopulationSpace:
     def __init__(self, pop_size):
         self.random_graph = GraphGenerator("data\\sample_graphs\\graph_one")
         self.pop_size = pop_size
+        self.n_nodes = self.random_graph.n_nodes
         
-    def create_chromosome(self, n_nodes):
-        chromosome = [random.randint(1, n_nodes) for _ in range(n_nodes)]
+    def create_chromosome(self, max_colors):
+        chromosome = [random.randint(1, max_colors) for _ in range(self.n_nodes)]
         return chromosome
 
-    def initialize_population(self):
-        pop = [self.create_chromosome(self.random_graph.n_nodes) for _ in range(self.pop_size)]
+    def initialize_population(self, max_colors):
+        pop = [Individual(self.create_chromosome(max_colors)) for _ in range(self.pop_size)]
         return pop
     
-    def calculate_fitness(self, chromosome):
+    def calculate_fitness(self, individual: 'Individual'):
+        chromosome = individual.chromosome
         bad_edges = 0
         
         for u, adj in self.random_graph.graph.items():
@@ -29,39 +34,28 @@ class PopulationSpace:
                     v_color = chromosome[v-1]
                     if u_color == v_color:
                         bad_edges += 1
+        
+        individual.fitness = bad_edges
         return bad_edges
+    
+    def run_estimation_phase(self):
+        initial_pop: List['Individual'] = self.initialize_population(self.n_nodes)
+
+        for ind in initial_pop:
+            self.calculate_fitness(ind)
+        
+        best_ep_individual = min(initial_pop, key=lambda x: x.belief)
+        return best_ep_individual.belief, initial_pop
+
 
     def selection(self, population):
-        temp_parents = random.sample(population, 2)
-        # print(f"Temp Parent one {temp_parents}")
-        # print(f"First parentA fitness: {self.calculate_fitness(temp_parents[0])}")
-        # print(f"Second parentA fitness: {self.calculate_fitness(temp_parents[1])}")
-        parent_one = min(temp_parents, key=self.calculate_fitness)
-        # print("-" * 50)
-        temp_parents = random.sample(population, 2)
-        # print(f"Temp Parent two {temp_parents}")
-        # print(f"First parentB fitness: {self.calculate_fitness(temp_parents[0])}")
-        # print(f"Second parentB fitness: {self.calculate_fitness(temp_parents[1])}")
-        # print("#"*50)
-        parent_two = min(temp_parents, key=self.calculate_fitness)
-        # print(parent_one)
-        # print("-" * 50)
-        # print(parent_two)
+        parent_one = min(random.sample(population, 2), key=lambda x: x.fitness)
+        parent_two = min(random.sample(population, 2), key=lambda x: x.fitness)
         return parent_one, parent_two
     
-    def selection_two(self, population):
-        fitnesses_of_all_chromosomes = [
-            (self.calculate_fitness(individual), individual) 
-            for individual in population
-        ]
-        
-        fitnesses_of_all_chromosomes.sort(key=lambda item: item[0]) #sort by min fitness
-        p1 = fitnesses_of_all_chromosomes[0][1]
-        p2 = fitnesses_of_all_chromosomes[1][1]
-        return p1, p2
 
-    def crossover(self, parent_one, parent_two):
-        n = len(parent_one)
+    def crossover(self, parent_one : 'Individual', parent_two : 'Individual'):
+        n = len(parent_one.chromosome)
         crosspoint = random.randint(0, n-2)
         child = parent_one[:crosspoint+1] + parent_two[crosspoint + 1:]
         # print(crosspoint)
@@ -70,17 +64,29 @@ class PopulationSpace:
         # print(self.calculate_fitness(child))
         return child
 
-    def mutation(self,child,allcolors):
+    def mutation(self,child_individual : 'Individual', general_belief):
             # print(f"before: {child}")
             
-            for u, adj in self.random_graph.graph.items():
-                u_color = child[u-1]
+            chromo = child_individual.chromosome
+            available_colors = list(range(1,general_belief+1))  #influence the population space by constraining the range of colors
+            vertex_index = random.randint(0, self.n_nodes - 1)
+            chromo[vertex_index] = random.choice(available_colors)
 
-                for v in adj:
-                    if (v > u):
-                        v_color = child[v-1]
-                        if u_color == v_color:
-                            new_color = random.choice(allcolors)
-                            child[v-1] = new_color
-            # print(f"after: {child}")
-            return child
+            return child_individual
+    
+    def perform_variation(self, population, pop_size, general_belief, muation_rate):
+        new_pop = []
+        num_children_to_generate = pop_size
+
+        for _ in range(num_children_to_generate):
+            p1,p2 = self.selection(population)
+            child = self.crossover(p1,p2)
+
+            if random.random() < muation_rate:
+                self.mutation(child, general_belief)
+            
+            self.calculate_fitness(child)
+            new_pop.append(child)
+        return new_pop
+            
+            

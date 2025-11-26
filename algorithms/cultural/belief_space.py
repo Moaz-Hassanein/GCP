@@ -11,7 +11,7 @@ class BeliefSpace:
         self.general_belief = initial_upper_bound
         self.group_metrics = {}  
         self.MAX_K = max_k # maximum number of individuals to inject when rg is 0 / stagnants are recurring
-        self.MUTATION_RATE = mutation_rate
+        self.MUTATION_INCREASE_RATE = mutation_rate
 
     def update_belief(self, best_indvidual: Individual) -> bool:
         new_belief = min(self.general_belief, best_indvidual.belief)
@@ -78,4 +78,9 @@ class BeliefSpace:
                     metrics['is_adapted'] = True
                     
             return group_improved
+        
+    def get_mutation_rate(self, default_rate, beleif_g=None):
+        if beleif_g is not None and beleif_g in self.group_metrics and self.group_metrics[beleif_g]['is_adapted']:
+            return min(1.0, default_rate * self.MUTATION_INCREASE_RATE)
+        return default_rate
 
