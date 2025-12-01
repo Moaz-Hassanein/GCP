@@ -26,16 +26,16 @@ class PopulationSpace:
         return min(population, key=lambda x: x.fitness)
 
     def calculate_fitness(self, individual: 'Individual'):
-        chromosome = individual.chromosome
+        chromo = individual.chromosome
         bad_edges = 0
         
         for u, adj in self.random_graph.graph.items():
-            u_color = chromosome[u-1]
+            u_color = chromo[u]
 
             for v in adj:
                 #condition to check adjacany once
                 if(v > u):
-                    v_color = chromosome[v-1]
+                    v_color = chromo[v]
                     if u_color == v_color:
                         bad_edges += 1
         
@@ -61,12 +61,13 @@ class PopulationSpace:
     def crossover(self, parent_one : 'Individual', parent_two : 'Individual'):
         n = len(parent_one.chromosome)
         crosspoint = random.randint(0, n-2)
-        child = parent_one[:crosspoint+1] + parent_two[crosspoint + 1:]
+        child = parent_one.chromosome[:crosspoint+1] + parent_two.chromosome[crosspoint + 1:]
         # print(crosspoint)
         # print(self.calculate_fitness(parent_one))
         # print(self.calculate_fitness(parent_two))
         # print(self.calculate_fitness(child))
-        return child
+        child_ind = Individual(child)
+        return child_ind
 
     def mutation(self,child_individual : 'Individual', general_belief):
             # print(f"before: {child}")
@@ -94,3 +95,4 @@ class PopulationSpace:
         return new_pop
             
             
+#70 = 70
