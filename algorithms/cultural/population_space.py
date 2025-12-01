@@ -3,13 +3,12 @@
 import random
 from utils.graph_generator import GraphGenerator
 from typing import TYPE_CHECKING, List
-if TYPE_CHECKING:
-    from algorithms.cultural.individual import Individual
+from algorithms.cultural.individual import Individual
 
 
 class PopulationSpace:
-    def __init__(self, pop_size):
-        self.random_graph = GraphGenerator("data\\sample_graphs\\graph_one")
+    def __init__(self, pop_size, path):
+        self.random_graph = GraphGenerator(path)
         self.pop_size = pop_size
         self.n_nodes = self.random_graph.n_nodes
         
@@ -21,6 +20,11 @@ class PopulationSpace:
         pop = [Individual(self.create_chromosome(max_colors)) for _ in range(self.pop_size)]
         return pop
     
+    def evaluate_and_get_best(self, population):
+        for ind in population:
+            self.calculate_fitness(ind)
+        return min(population, key=lambda x: x.fitness)
+
     def calculate_fitness(self, individual: 'Individual'):
         chromosome = individual.chromosome
         bad_edges = 0
@@ -48,7 +52,7 @@ class PopulationSpace:
         return best_ep_individual.belief, initial_pop
 
 
-    def selection(self, population):
+    def selection(self, population: List['Individual']):
         parent_one = min(random.sample(population, 2), key=lambda x: x.fitness)
         parent_two = min(random.sample(population, 2), key=lambda x: x.fitness)
         return parent_one, parent_two

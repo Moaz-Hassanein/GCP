@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 class BeliefSpace:
     def __init__(self, initial_upper_bound, max_k, mutation_rate):
         self.general_belief = initial_upper_bound
-        self.group_metrics = {}  
+        self.group_metrics = {}  # prev , curr , stagnant_count , is_adapted
         self.MAX_K = max_k # maximum number of individuals to inject when rg is 0 / stagnants are recurring
         self.MUTATION_INCREASE_RATE = mutation_rate
 
@@ -27,11 +27,11 @@ class BeliefSpace:
         return 1.0 - (current_best_fitness / previous_best_fitness)
     
     def calculate_Kg(self, group_belief, rg):
-        if rg <= 0.9 and group_belief >= self.general_belief - 2:
+        if rg <= 0.9 and group_belief >= self.general_belief - 2:   # 3 >= 4-2
             return math.floor(self.MAX_K * (rg + 0.1))
         else:
             return math.floor(self.MAX_K * rg)
-        
+            
     def process_groups(self, population: List['Individual'], pop_space_ref: 'PopulationSpace'):
         group_improved = False
         groups_to_update = {}
