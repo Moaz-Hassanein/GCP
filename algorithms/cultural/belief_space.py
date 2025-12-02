@@ -138,6 +138,7 @@ class Individual:
 # --- 2. BeliefSpace Class (The Macro-Level Knowledge) ---
 
 class BeliefSpace:
+<<<<<<< HEAD
     """
     Manages the collective knowledge, including the General Belief and group metrics
     for self-adaptiveness (r_g, K_g).
@@ -151,6 +152,13 @@ class BeliefSpace:
         self.group_metrics = {}
         self.MAX_K = max_k # K: Max individuals to inject
         self.MUTATION_INCREASE_FACTOR = mutation_increase_factor
+=======
+    def __init__(self, initial_upper_bound, max_k, mutation_rate):
+        self.general_belief = initial_upper_bound
+        self.group_metrics = {}  # prev , curr , stagnant_count , is_adapted
+        self.MAX_K = max_k # maximum number of individuals to inject when rg is 0 / stagnants are recurring
+        self.MUTATION_INCREASE_RATE = mutation_rate
+>>>>>>> 9f8b20da916a6dc0ea0791bf99845f1fd9923bd5
 
     def update_general_belief(self, best_individual: 'Individual') -> bool:
         """Updates the general belief if a better (fewer colors) individual is found."""
@@ -167,6 +175,7 @@ class BeliefSpace:
             return 0.0 # Already perfect
         # r_g = 1 - (current / previous)
         return 1.0 - (current_best_fitness / previous_best_fitness)
+<<<<<<< HEAD
 
     def calculate_Kg(self, rg, group_belief):
         """Calculates the number of random individuals to inject using the piecewise formula."""
@@ -174,16 +183,26 @@ class BeliefSpace:
         # Condition Check: (r_g <= 0.9 AND belief_g >= general_belief - 2)
         if rg <= 0.9 and group_belief >= self.general_belief - 2:
             # Case 1: Promising, stalled group gets bonus (+0.1)
+=======
+    
+    def calculate_Kg(self, group_belief, rg):
+        if rg <= 0.9 and group_belief >= self.general_belief - 2:   # 3 >= 4-2
+>>>>>>> 9f8b20da916a6dc0ea0791bf99845f1fd9923bd5
             return math.floor(self.MAX_K * (rg + 0.1))
         else:
             # Case 2: Standard scaling
             return math.floor(self.MAX_K * rg)
+<<<<<<< HEAD
 
     def process_groups(self, population, pop_space_ref):
         """
         Partitions the population, tracks progress (Step 5), and applies K_g injection.
         Returns True if any group improved its fitness.
         """
+=======
+            
+    def process_groups(self, population: List['Individual'], pop_space_ref: 'PopulationSpace'):
+>>>>>>> 9f8b20da916a6dc0ea0791bf99845f1fd9923bd5
         group_improved = False
         groups_to_update = {}
         
@@ -242,7 +261,17 @@ class BeliefSpace:
                         
                     # Increase the mutation chance for this group
                     metrics['is_adapted'] = True
+<<<<<<< HEAD
                     # The actual mutation rate is fetched by the Cultural class later
+=======
+                    
+            return group_improved
+        
+    def get_mutation_rate(self, default_rate, beleif_g=None):
+        if beleif_g is not None and beleif_g in self.group_metrics and self.group_metrics[beleif_g]['is_adapted']:
+            return min(1.0, default_rate * self.MUTATION_INCREASE_RATE)
+        return default_rate
+>>>>>>> 9f8b20da916a6dc0ea0791bf99845f1fd9923bd5
 
         return group_improved
     

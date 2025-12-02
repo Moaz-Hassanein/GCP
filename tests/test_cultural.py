@@ -1,64 +1,63 @@
-from algorithms.cultural import population_space
-from utils.graph_generator import GraphGenerator
+import sys
+from pathlib import Path
+
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from algorithms.cultural.cultural_algorithm import CulturalAlgorithm
 from algorithms.cultural.population_space import PopulationSpace
-from typing import Dict, List
-import pdb
-import random
+from typing import TYPE_CHECKING, List
 
 
-popInitialize = PopulationSpace(100)
-N_NODES = popInitialize.random_graph.n_nodes
-print(N_NODES)
+graph_path = project_root / "data" / "sample_graphs" / "graph_two"
 
+saved_population = None
 
-test_chrmsm = popInitialize.create_chromosome(N_NODES)
+def test_pop_space_operators():
+    global saved_population
 
-test_pop = popInitialize.initialize_population()
+    pop_size = 10
+    ps = PopulationSpace(pop_size, graph_path)
 
+    if saved_population is None:
+        print("Initializing new population...")
+        saved_population = ps.initialize_population(ps.n_nodes)
+        ps.evaluate_and_get_best(saved_population)
+    else:
+        print("Reusing existing population...")
 
-test_fitness = popInitialize.calculate_fitness(test_chrmsm)
+    print(f"Initial Population (Size {len(saved_population)}):")
+    for i in range(pop_size):
+        print(f"  {saved_population[i].chromosome} -> {saved_population[i].fitness}")
 
+    p1, p2 = ps.selection(saved_population)
+    print(f"\nSelected Parents (by lowest fitness):")
+    print(f"  Parent 1: {p1.chromosome} -> {p1.fitness}")
+    print(f"  Parent 2: {p2.chromosome} -> {p2.fitness}")
+    assert p1.fitness is not None and p2.fitness is not None, "Parents must have calculated fitness."
 
-p1, p2 = popInitialize.selection(test_pop)
+def test_ca():
+    print("Running CA Test")
+    pop_size = 200
+    max_stag = 600
+    max_k = 10
+    mutation_rate = 0.1
+    mutation_increase_factor = 2.0
+    ca_runner = CulturalAlgorithm(pop_size, max_stag, max_k,mutation_rate, mutation_increase_factor, graph_path)
+    ca_runner.run_ca()
 
-popInitialize.crossover(p1,p2)
-
-mutated_chromosome = popInitialize.mutation(test_chrmsm, [random.randint(1, popInitialize.random_graph.n_nodes) for _ in range(popInitialize.random_graph.n_nodes)])
-
-
-def runGA(pop: List[int], results_tracker: List[int]):
-    p1, p2 = popInitialize.selection_two(pop)
-    child = popInitialize.crossover(p1,p2)
-    child = popInitialize.mutation(child,[random.randint(1, popInitialize.random_graph.n_nodes) for _ in range(popInitialize.random_graph.n_nodes)])
-    pop.append(child)
-
-
-    current_generation_fitness = [popInitialize.calculate_fitness(individual) for individual in pop]
-    best_fitness = min(current_generation_fitness)
-    print(f" (Best Fitness: {best_fitness}) -> Exploitation")
-    results_tracker.append(best_fitness)
-
-
-popul = popInitialize.initialize_population()
-# print(f"this is our population {popul}")
-runs = 20000
-temp = runs
-generation_results = []
-while(runs != 0):
-    runGA(popul, generation_results)
-
-    # print(f"this is the generational results {generation_results}")
-    current_gen = temp - runs + 1
-    print(f"Generation {current_gen}: Best Fitness = {generation_results[-1]}")
-    if(generation_results[-1] == 0):
-        break
-
-    runs -= 1
-
-# --- FINAL RESULTS ---
-print("\n--- Final Summary ---")
-print("Best Fitness per Generation:", generation_results)
-
-
-best_overall_fitness = min(generation_results)
-print(f"Overall Best Fitness Achieved: {best_overall_fitness}")
+test_ca()
+# test_pop_space_operators()
+# print("\n" + "="*50)
+# print("Running test again with same population:")
+# print("="*50)
+# test_pop_space_operators()
+# print("\n" + "="*50)
+# print("Running test again with same population:")
+# print("="*50)
+# test_pop_space_operators()
+# print("\n" + "="*50)
+# print("Running test again with same population:")
+# print("="*50)
+# test_pop_space_operators()
