@@ -16,15 +16,9 @@
             border-radius: 20px;
             padding: 2rem;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
             overflow: hidden;
-        }
-        
-        .algorithm-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
         
         .algorithm-card::before {
@@ -34,12 +28,6 @@
             left: 0;
             width: 100%;
             height: 5px;
-            transition: height 0.3s ease;
-        }
-        
-        .algorithm-card:hover::before {
-            height: 100%;
-            opacity: 0.1;
         }
         
         .backtracking-card::before {
@@ -48,6 +36,15 @@
         
         .ca-card::before {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .launch-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .launch-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
         
         .feature-item {
@@ -114,7 +111,7 @@
                 </div>
                 
                 <div class="mt-6 text-center">
-                    <span class="inline-block px-4 py-2 bg-purple-600 text-white rounded-full font-semibold">
+                    <span class="launch-btn inline-block px-4 py-2 bg-purple-600 text-white rounded-full font-semibold">
                         Launch →
                     </span>
                 </div>
@@ -152,7 +149,7 @@
                 </div>
                 
                 <div class="mt-6 text-center">
-                    <span class="inline-block px-4 py-2 bg-pink-600 text-white rounded-full font-semibold">
+                    <span class="launch-btn inline-block px-4 py-2 bg-pink-600 text-white rounded-full font-semibold">
                         Launch →
                     </span>
                 </div>
