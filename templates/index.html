@@ -188,7 +188,16 @@
                            class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-200">
                 </div>
                 
-                <div class="pt-3 border-t border-slate-200">
+                <div class="pt-3 border-t border-slate-200 space-y-3">
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="use-estimation-phase" checked
+                               class="w-4 h-4 rounded border-slate-300 bg-white text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-sm text-slate-700">
+                            <span class="font-semibold">Use Estimation Phase</span>
+                            <span class="block text-xs text-slate-500 mt-1">Initialize with EP for better starting point</span>
+                        </span>
+                    </label>
+                    
                     <label class="flex items-center space-x-3 cursor-pointer">
                         <input type="checkbox" id="fixed-seed" 
                                class="w-4 h-4 rounded border-slate-300 bg-white text-indigo-600 focus:ring-indigo-500">
@@ -912,7 +921,8 @@
                 mutation_rate: parseFloat(document.getElementById('mutation').value),
                 max_k: parseInt(document.getElementById('max-k').value),
                 graph_name: document.getElementById('graph-select').value,
-                fixed_seed: document.getElementById('fixed-seed').checked
+                fixed_seed: document.getElementById('fixed-seed').checked,
+                use_estimation_phase: document.getElementById('use-estimation-phase').checked
             };
             
             // Update current parameters while preserving num_nodes and num_edges

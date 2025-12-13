@@ -5,13 +5,15 @@ from algorithms.cultural.belief_space import BeliefSpace
 import time
 
 
-class CulturalAlgorithm:
+class CulturalAlgorithm: # orchestrator
     def __init__(self, pop_size=100, max_stagnation_tries=50, 
-                 max_k=10,mutation_rate=0.1, mutation_increase_factor=2.0, graph_path="data\\sample_graphs\\graph_two"):
+                 max_k=10,mutation_rate=0.1, mutation_increase_factor=2.0, 
+                 graph_path="data\\sample_graphs\\graph_two", use_estimation_phase=True):
        
         self.pop_size = pop_size
         self.max_stagnation_tries = max_stagnation_tries
         self.initial_muation_rate = mutation_rate
+        self.use_estimation_phase = use_estimation_phase
 
         self.pop_space = PopulationSpace(self.pop_size, graph_path)
         self.initial_upper_bound = self.pop_space.n_nodes # safe upper bound initialization
@@ -22,13 +24,18 @@ class CulturalAlgorithm:
     def run_ca(self):
        start_time = time.time()
 
-        # With EP
-       initial_bound, initial_pop = self.pop_space.run_estimation_phase()
-       self.belief_space.general_belief = initial_bound # set B
-       self.population = initial_pop
-       
-       # Without EP
-       # self.population = self.pop_space.initialize_population(self.initial_upper_bound)
+       # Use Estimation Phase or Random Initialization based on user choice
+       if self.use_estimation_phase:
+           # With EP
+           initial_bound, initial_pop = self.pop_space.run_estimation_phase()
+           self.belief_space.general_belief = initial_bound # set B
+           self.population = initial_pop
+           print("Using Estimation Phase for initialization")
+       else:
+           # Without EP - Random initialization
+           self.population = self.pop_space.initialize_population(self.initial_upper_bound)
+           self.belief_space.general_belief = self.initial_upper_bound
+           print("Using Random initialization (No Estimation Phase)")
        
 
        best_initial = min(self.population, key=lambda x: x.fitness)
@@ -69,9 +76,10 @@ class CulturalAlgorithm:
 
         while T < S:
             best_of_gen = self.pop_space.evaluate_and_get_best(self.population)
-            old_general_belief = self.belief_space.general_belief
+            # old_general_belief = self.belief_space.general_belief
 
             belief_changed = self.belief_space.update_belief(best_of_gen)
+            print(f"belief changed? {belief_changed}")
             group_improved = self.belief_space.process_groups(self.population, self.pop_space)
 
             if not group_improved:

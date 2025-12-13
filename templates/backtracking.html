@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtracking - Graph Coloring Solver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            position: relative;
+            flex: 1;
+            background: linear-gradient(135deg, #FDFFE6 0%, #FFF9E3 100%);
+        }
+        
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+        
+        .sidebar {
+            width: 320px;
+            background: #2C3E50;
+            color: white;
+            overflow-y: auto;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.25rem 0;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary { background: #E67E22; color: white; }
+        .btn-secondary { background: #34495E; color: white; }
+        .btn-danger { background: #C0392B; color: white; }
+        .btn-success { background: #27AE60; color: white; }
+        .btn-info { background: #2980B9; color: white; }
+        .btn-purple { background: #8E44AD; color: white; }
+        .btn-gray { background: #7F8C8D; color: white; }
+        
+        .btn-active {
+            background: #E67E22;
+            box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.3);
+        }
+        
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 2px;
+            margin: 0.5rem 0;
+        }
+        
+        .color-chip {
+            width: 100%;
+            height: 20px;
+            border-radius: 3px;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+        }
+        
+        .input-field {
+            background: #34495E;
+            border: 1px solid #4A5F7F;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 6px;
+            width: 100%;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #E67E22;
+        }
+        
+        .section-title {
+            color: #BDC3C7;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem 0;
+            text-transform: uppercase;
+        }
+        
+        .log-status {
+            background: #34495E;
+            color: #2ECC71;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            border-top: 1px solid #4A5F7F;
+        }
+        
+        select, .combo-box {
+            background: #34495E;
+            color: white;
+            border: 1px solid #4A5F7F;
+            padding: 0.5rem;
+            border-radius: 6px;
+            width: 100%;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 750px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .node {
+            fill: white;
+            stroke: #34495E;
+            stroke-width: 2;
+        }
+        
+        .edge {
+            stroke: #95A5A6;
+            stroke-width: 2;
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex; height: 100vh;">
+        
+        <!-- Main Canvas Area -->
+        <div id="canvas-container">
+            <canvas id="graph-canvas"></canvas>
+        </div>
+        
+        <!-- Right Sidebar -->
+        <div class="sidebar">
+            <div style="padding: 1.5rem;">
+                
+                <!-- Header -->
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <h1 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">
+                        🎮 BACKTRACKING
+                    </h1>
+                    <p style="font-size: 0.875rem; color: #BDC3C7;">Graph Coloring Solver</p>
+                    <button onclick="window.location.href='/'" class="btn btn-secondary" style="margin-top: 1rem; font-size: 0.875rem;">
+                        ← Back to Selection
+                    </button>
+                </div>
+                
+                <!-- Generator Section -->
+                <div style="background: #34495E; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="font-weight: 600; margin-bottom: 0.75rem; color: #E67E22;">⚡ Smart Generator</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <div>
+                            <label style="font-size: 0.75rem; color: #BDC3C7;">Nodes</label>
+                            <input type="number" id="input-nodes" class="input-field" value="20" min="3" max="100">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; color: #BDC3C7;">Edges</label>
+                            <input type="number" id="input-edges" class="input-field" value="30" min="1" max="500">
+                        </div>
+                    </div>
+                    <button id="btn-generate" class="btn btn-success">🌌 Generate Graph</button>
+                </div>
+                
+                <!-- Project Manager Section -->
+                <div style="background: #34495E; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="font-weight: 600; margin-bottom: 0.75rem; color: #3498DB;">💾 Project Manager</div>
+                    <button id="btn-save" class="btn btn-info">💾 Save Current Graph</button>
+                    <label style="font-size: 0.75rem; color: #BDC3C7; display: block; margin-top: 0.75rem;">Load Saved:</label>
+                    <select id="combo-files" class="combo-box" style="margin-bottom: 0.5rem;"></select>
+                    <button id="btn-load" class="btn btn-secondary">📂 Load Selected</button>
+                </div>
+                
+                <!-- Tools Section -->
+                <div class="section-title">🛠️ TOOLS</div>
+                <button id="btn-node" class="btn btn-active">📍 Add Node</button>
+                <button id="btn-edge" class="btn btn-secondary">🔗 Connect</button>
+                <button id="btn-delete" class="btn btn-danger">🗑️ Delete</button>
+                
+                <!-- Palette Section -->
+                <div class="section-title">🎨 PALETTE (<span id="palette-count">0</span>)</div>
+                <div id="color-palette" class="palette-grid"></div>
+                
+                <!-- Solver Section -->
+                <hr style="border: 1px solid #4A5F7F; margin: 1rem 0;">
+                <label style="font-size: 0.875rem; color: white; display: block; margin-bottom: 0.5rem;">Colors Limit:</label>
+                <input type="range" id="limit-scale" min="1" max="10" value="4" style="width: 100%;">
+                <div style="text-align: center; color: #E67E22; font-weight: bold; font-size: 1.25rem;" id="limit-display">4</div>
+                
+                <button id="btn-solve" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem; margin-top: 1rem;">🚀 SOLVE</button>
+                <button id="btn-reset" class="btn btn-purple">🖌️ Reset Colors</button>
+                <button id="btn-clear" class="btn btn-gray">🧹 Clear All</button>
+                
+                <!-- Status Log -->
+                <div id="log-status" class="log-status" style="margin-top: 1rem;">
+                    Ready.
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Performance Dashboard Modal -->
+    <div id="dashboard-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 1.5rem; color: #2C3E50;">
+                📊 Performance Analytics Dashboard
+            </h2>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <canvas id="performance-chart" width="600" height="300"></canvas>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8fafc;">
+                        <th style="padding: 0.75rem; text-align: left; border: 1px solid #e2e8f0;">Metric</th>
+                        <th style="padding: 0.75rem; text-align: center; border: 1px solid #e2e8f0;">Value</th>
+                    </tr>
+                </thead>
+                <tbody id="metrics-table">
+                </tbody>
+            </table>
+            
+            <button onclick="closeDashboard()" class="btn btn-secondary" style="margin-top: 1.5rem;">Close Report</button>
+        </div>
+    </div>
+    
+    <script>
+        // Global Variables
+        const canvas = document.getElementById('graph-canvas');
+        const ctx = canvas.getContext('2d');
+        let nodes = [];
+        let edges = [];
+        let adjList = {};
+        let nodeCounter = 0;
+        let currentMode = 'NODE';
+        let selectedNode = null;
+        let availableColors = [];
+        let performanceChart = null;
+        
+        // Initialize Canvas Size
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            drawGraph();
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Load Available Colors
+        fetch('/api/backtracking/colors')
+            .then(res => res.json())
+            .then(data => {
+                availableColors = data.colors || [];
+                updatePalette();
+                updateLimitScale();
+            });
+        
+        function updatePalette() {
+            const palette = document.getElementById('color-palette');
+            document.getElementById('palette-count').textContent = availableColors.length;
+            palette.innerHTML = '';
+            availableColors.forEach(color => {
+                const chip = document.createElement('div');
+                chip.className = 'color-chip';
+                chip.style.background = color.toLowerCase();
+                chip.title = color;
+                palette.appendChild(chip);
+            });
+        }
+        
+        function updateLimitScale() {
+            const scale = document.getElementById('limit-scale');
+            scale.max = availableColors.length;
+            scale.value = Math.min(4, availableColors.length);
+            updateLimitDisplay();
+        }
+        
+        function updateLimitDisplay() {
+            const value = document.getElementById('limit-scale').value;
+            document.getElementById('limit-display').textContent = value;
+        }
+        
+        document.getElementById('limit-scale').addEventListener('input', updateLimitDisplay);
+        
+        // Load Saved Graphs List
+        function refreshSavedFiles() {
+            fetch('/api/backtracking/saved-graphs')
+                .then(res => res.json())
+                .then(data => {
+                    const combo = document.getElementById('combo-files');
+                    combo.innerHTML = '';
+                    data.files.forEach(file => {
+                        const option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file;
+                        combo.appendChild(option);
+                    });
+                });
+        }
+        
+        refreshSavedFiles();
+        
+        // Node and Edge Management
+        function addNode(x, y, id = null) {
+            const nid = id !== null ? id : nodeCounter++;
+            const radius = nodes.length < 25 ? 20 : 15;
+            nodes.push({ id: nid, x, y, radius, color: 'white' });
+            if (!adjList[nid]) adjList[nid] = [];
+            drawGraph();
+            return nid;
+        }
+        
+        function addEdge(u, v) {
+            if (u === v) return;
+            if (!adjList[u].includes(v)) {
+                adjList[u].push(v);
+                adjList[v].push(u);
+                edges.push({ from: u, to: v });
+                drawGraph();
+            }
+        }
+        
+        function deleteNode(nid) {
+            nodes = nodes.filter(n => n.id !== nid);
+            edges = edges.filter(e => e.from !== nid && e.to !== nid);
+            delete adjList[nid];
+            Object.keys(adjList).forEach(key => {
+                adjList[key] = adjList[key].filter(v => v !== nid);
+            });
+            drawGraph();
+        }
+        
+        function clearAll() {
+            nodes = [];
+            edges = [];
+            adjList = {};
+            nodeCounter = 0;
+            selectedNode = null;
+            drawGraph();
+            logStatus('Canvas cleared');
+        }
+        
+        function resetColors() {
+            nodes.forEach(n => n.color = 'white');
+            drawGraph();
+            logStatus('Colors reset');
+        }
+        
+        // Drawing Functions
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            edges.forEach(edge => {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+                if (fromNode && toNode) {
+                    ctx.beginPath();
+                    ctx.moveTo(fromNode.x, fromNode.y);
+                    ctx.lineTo(toNode.x, toNode.y);
+                    ctx.strokeStyle = '#95A5A6';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.fill();
+                ctx.strokeStyle = '#34495E';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = '#2C3E50';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.id, node.x, node.y);
+            });
+        }
+        
+        // Click Handler
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const clickedNode = getNodeAtPosition(x, y);
+            
+            if (currentMode === 'NODE' && !clickedNode) {
+                addNode(x, y);
+            } else if (currentMode === 'EDGE' && clickedNode) {
+                if (selectedNode === null) {
+                    selectedNode = clickedNode.id;
+                    clickedNode.color = '#E67E22';
+                    drawGraph();
+                } else {
+                    addEdge(selectedNode, clickedNode.id);
+                    nodes.find(n => n.id === selectedNode).color = 'white';
+                    selectedNode = null;
+                    drawGraph();
+                }
+            } else if (currentMode === 'DELETE' && clickedNode) {
+                deleteNode(clickedNode.id);
+            }
+        });
+        
+        function getNodeAtPosition(x, y) {
+            return nodes.find(n => {
+                const dist = Math.sqrt((x - n.x) ** 2 + (y - n.y) ** 2);
+                return dist <= n.radius + 5;
+            });
+        }
+        
+        // Mode Buttons
+        document.getElementById('btn-node').addEventListener('click', () => setMode('NODE'));
+        document.getElementById('btn-edge').addEventListener('click', () => setMode('EDGE'));
+        document.getElementById('btn-delete').addEventListener('click', () => setMode('DELETE'));
+        
+        function setMode(mode) {
+            currentMode = mode;
+            selectedNode = null;
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.classList.remove('btn-active');
+            });
+            if (mode === 'NODE') document.getElementById('btn-node').classList.add('btn-active');
+            else if (mode === 'EDGE') document.getElementById('btn-edge').classList.add('btn-active');
+            else if (mode === 'DELETE') document.getElementById('btn-delete').classList.add('btn-active');
+            resetColors();
+        }
+        
+        // Generate Random Graph
+        document.getElementById('btn-generate').addEventListener('click', () => {
+            const numNodes = parseInt(document.getElementById('input-nodes').value);
+            const numEdges = parseInt(document.getElementById('input-edges').value);
+            
+            clearAll();
+            
+            const padding = 100;
+            const width = canvas.width - 2 * padding;
+            const height = canvas.height - 2 * padding;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(width, height) / 2 * 0.7;
+            
+            // Create nodes in circular layout
+            for (let i = 0; i < numNodes; i++) {
+                const angle = (2 * Math.PI * i) / numNodes;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                addNode(x, y, i);
+            }
+            
+            // Create random edges
+            let edgesCreated = 0;
+            const maxAttempts = numEdges * 10;
+            let attempts = 0;
+            
+            while (edgesCreated < numEdges && attempts < maxAttempts) {
+                const u = Math.floor(Math.random() * numNodes);
+                const v = Math.floor(Math.random() * numNodes);
+                if (u !== v && !adjList[u].includes(v)) {
+                    addEdge(u, v);
+                    edgesCreated++;
+                }
+                attempts++;
+            }
+            
+            nodeCounter = numNodes;
+            logStatus(`Generated graph with ${numNodes} nodes and ${edgesCreated} edges`);
+        });
+        
+        // Save Graph
+        document.getElementById('btn-save').addEventListener('click', () => {
+            if (nodes.length === 0) {
+                alert('Canvas is empty!');
+                return;
+            }
+            
+            const filename = prompt('Enter graph name (without .json):');
+            if (!filename) return;
+            
+            const saveData = {
+                nodes: {},
+                adj_list: {}
+            };
+            
+            nodes.forEach(n => {
+                saveData.nodes[n.id] = { x: n.x, y: n.y };
+            });
+            
+            Object.keys(adjList).forEach(key => {
+                saveData.adj_list[key] = adjList[key];
+            });
+            
+            fetch('/api/backtracking/save-graph', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename, data: saveData })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Graph saved as ${filename}.json`);
+                    refreshSavedFiles();
+                } else {
+                    alert('Failed to save: ' + data.error);
+                }
+            });
+        });
+        
+        // Load Graph
+        document.getElementById('btn-load').addEventListener('click', () => {
+            const filename = document.getElementById('combo-files').value;
+            if (!filename) return;
+            
+            fetch(`/api/backtracking/load-graph/${filename}`)
+                .then(res => res.json())
+                .then(data => {
+                    clearAll();
+                    
+                    // Load nodes
+                    Object.keys(data.nodes).forEach(nid => {
+                        const { x, y } = data.nodes[nid];
+                        addNode(x, y, parseInt(nid));
+                    });
+                    
+                    // Update counter
+                    nodeCounter = Math.max(...nodes.map(n => n.id)) + 1;
+                    
+                    // Load edges
+                    Object.keys(data.adj_list).forEach(u => {
+                        data.adj_list[u].forEach(v => {
+                            if (parseInt(u) < parseInt(v)) {
+                                addEdge(parseInt(u), parseInt(v));
+                            }
+                        });
+                    });
+                    
+                    logStatus(`Loaded ${filename}`);
+                });
+        });
+        
+        // Solve Graph
+        document.getElementById('btn-solve').addEventListener('click', async () => {
+            if (nodes.length === 0) {
+                alert('Canvas is empty!');
+                return;
+            }
+            
+            resetColors();
+            logStatus('Solving...');
+            
+            const limit = parseInt(document.getElementById('limit-scale').value);
+            const graphData = {};
+            Object.keys(adjList).forEach(key => {
+                graphData[key] = adjList[key].map(String);
+            });
+            
+            try {
+                const response = await fetch('/api/backtracking/solve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        graph: graphData,
+                        color_limit: limit
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.solution) {
+                    await animateColoring(result.solution);
+                    showDashboard(result.analytics);
+                } else {
+                    alert(`Failed! Need more than ${limit} colors.`);
+                    if (result.analytics) {
+                        showDashboard(result.analytics);
+                    }
+                }
+            } catch (error) {
+                alert('Error solving graph: ' + error);
+                logStatus('Error occurred');
+            }
+        });
+        
+        async function animateColoring(solution) {
+            const delay = 200;
+            const usedColors = new Set();
+            
+            for (const [nodeId, colorName] of Object.entries(solution)) {
+                const node = nodes.find(n => n.id === parseInt(nodeId));
+                if (node) {
+                    node.color = colorName.toLowerCase();
+                    usedColors.add(colorName);
+                    drawGraph();
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            
+            alert(`Coloring Finished! 🎨\nUsed ${usedColors.size} colors.`);
+        }
+        
+        function showDashboard(analytics) {
+            const modal = document.getElementById('dashboard-modal');
+            modal.classList.add('active');
+            
+            // Update metrics table
+            const table = document.getElementById('metrics-table');
+            const status = analytics.solution_found ? '✅ Success' : '❌ Failed';
+            table.innerHTML = `
+                <tr>
+                    <td style="padding: 0.75rem; border: 1px solid #e2e8f0;">Algorithm Status</td>
+                    <td style="padding: 0.75rem; border: 1px solid #e2e8f0; text-align: center;">${status}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border: 1px solid #e2e8f0;">Execution Time</td>
+                    <td style="padding: 0.75rem; border: 1px solid #e2e8f0; text-align: center;">${analytics.execution_time_ms.toFixed(4)} ms</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border: 1px solid #e2e8f0;">Total Recursive Calls</td>
+                    <td style="padding: 0.75rem; border: 1px solid #e2e8f0; text-align: center;">${analytics.nodes_visited}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border: 1px solid #e2e8f0;">Backtracks (Dead Ends)</td>
+                    <td style="padding: 0.75rem; border: 1px solid #e2e8f0; text-align: center;">${analytics.backtracks_count}</td>
+                </tr>
+            `;
+            
+            // Create performance chart
+            const chartCanvas = document.getElementById('performance-chart');
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+            
+            performanceChart = new Chart(chartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Search Space\n(Nodes Visited)', 'Pruning Operations\n(Backtracks)'],
+                    datasets: [{
+                        label: 'Count',
+                        data: [analytics.nodes_visited, analytics.backtracks_count],
+                        backgroundColor: ['#3498DB', '#E74C3C']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Backtracking Efficiency Analysis',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function closeDashboard() {
+            document.getElementById('dashboard-modal').classList.remove('active');
+        }
+        
+        // Other Controls
+        document.getElementById('btn-reset').addEventListener('click', resetColors);
+        document.getElementById('btn-clear').addEventListener('click', clearAll);
+        
+        function logStatus(msg) {
+            document.getElementById('log-status').textContent = '>> ' + msg;
+        }
+    </script>
+</body>
+</html>

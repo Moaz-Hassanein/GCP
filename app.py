@@ -18,6 +18,10 @@ from algorithms.cultural.cultural_algorithm import CulturalAlgorithm
 from algorithms.cultural.population_space import PopulationSpace
 from algorithms.cultural.belief_space import BeliefSpace
 from utils.graph_generator import GraphGenerator
+from algorithms.backtracking.BackTracking.Algo.backtracking import Backtracking
+from algorithms.backtracking.BackTracking.Performance.PerformanceAnalytics import PerformanceAnalytics
+import json
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'cultural_algorithm_secret_2025'
@@ -36,9 +40,9 @@ class CulturalAlgorithmWebSocket(CulturalAlgorithm):
     
     def __init__(self, pop_size=100, max_stagnation_tries=50, max_k=10,
                  mutation_rate=0.1, mutation_increase_factor=2.0, 
-                 graph_path="data/sample_graphs/graph_two"):
+                 graph_path="data/sample_graphs/graph_two", use_estimation_phase=True):
         super().__init__(pop_size, max_stagnation_tries, max_k, 
-                        mutation_rate, mutation_increase_factor, graph_path)
+                        mutation_rate, mutation_increase_factor, graph_path, use_estimation_phase)
         self.generation = 0
         self.should_stop = False
         
@@ -46,13 +50,17 @@ class CulturalAlgorithmWebSocket(CulturalAlgorithm):
         """Run CA with real-time Socket.IO events"""
         start_time = time.time()
         
-        # Random initialization instead of estimation phase
-        self.belief_space.general_belief = self.initial_upper_bound
-        self.population = self.pop_space.initialize_population(self.initial_upper_bound)
-        
-        # Calculate fitness for initial population
-        for ind in self.population:
-            self.pop_space.calculate_fitness(ind)
+        # Use Estimation Phase or Random Initialization based on user choice
+        if self.use_estimation_phase:
+            initial_bound, initial_pop = self.pop_space.run_estimation_phase()
+            self.belief_space.general_belief = initial_bound
+            self.population = initial_pop
+        else:
+            self.belief_space.general_belief = self.initial_upper_bound
+            self.population = self.pop_space.initialize_population(self.initial_upper_bound)
+            # Calculate fitness for initial population
+            for ind in self.population:
+                self.pop_space.calculate_fitness(ind)
         
         best_initial = min(self.population, key=lambda x: x.fitness)
         
@@ -170,8 +178,20 @@ class CulturalAlgorithmWebSocket(CulturalAlgorithm):
 
 @app.route('/')
 def index():
-    """Serve the main HTML page"""
+    """Serve the algorithm selection page"""
+    return render_template('algorithm_selection.html')
+
+
+@app.route('/cultural')
+def cultural():
+    """Serve the Cultural Algorithm page"""
     return render_template('index.html')
+
+
+@app.route('/backtracking')
+def backtracking():
+    """Serve the Backtracking Algorithm page"""
+    return render_template('backtracking.html')
 
 
 @app.route('/api/graphs', methods=['GET'])
@@ -344,6 +364,7 @@ def handle_start_simulation(data):
         max_k = int(data.get('max_k', 10))
         graph_name = data.get('graph_name', 'graph_two')
         fixed_seed = data.get('fixed_seed', False)
+        use_estimation_phase = data.get('use_estimation_phase', True)
         graph_path = f"data/sample_graphs/{graph_name}"
         
         # Set random seed if fixed_seed is enabled
@@ -353,7 +374,8 @@ def handle_start_simulation(data):
             print(f"Using fixed seed (42) for reproducible results")
         
         print(f"Starting simulation with: pop_size={pop_size}, max_stagnation={max_stagnation}, "
-              f"mutation_rate={mutation_rate}, max_k={max_k}, graph={graph_name}, fixed_seed={fixed_seed}")
+              f"mutation_rate={mutation_rate}, max_k={max_k}, graph={graph_name}, fixed_seed={fixed_seed}, "
+              f"use_estimation_phase={use_estimation_phase}")
         
         # Create algorithm instance
         current_simulation = CulturalAlgorithmWebSocket(
@@ -361,7 +383,8 @@ def handle_start_simulation(data):
             max_stagnation_tries=max_stagnation,
             max_k=max_k,
             mutation_rate=mutation_rate,
-            graph_path=graph_path
+            graph_path=graph_path,
+            use_estimation_phase=use_estimation_phase
         )
         
         simulation_running = True
@@ -397,6 +420,119 @@ def handle_stop_simulation():
         emit('simulation_stopped', {'status': 'stopped'})
     else:
         emit('error', {'message': 'No simulation running'})
+
+
+# ============== BACKTRACKING API ENDPOINTS ==============
+
+@app.route('/api/backtracking/colors', methods=['GET'])
+def get_colors():
+    """Return available colors for backtracking"""
+    try:
+        colors_path = Path('algorithms/backtracking/BackTracking/Colors/color.json')
+        if colors_path.exists():
+            with open(colors_path, 'r') as f:
+                data = json.load(f)
+                return jsonify({'colors': data.get('all_colors', [])})
+        else:
+            return jsonify({'colors': ["Red", "Green", "Blue", "Yellow", "Orange", "Purple"]})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/backtracking/saved-graphs', methods=['GET'])
+def get_saved_graphs():
+    """Return list of saved backtracking graphs"""
+    try:
+        saves_dir = Path('algorithms/backtracking/SavedGraphs')
+        if not saves_dir.exists():
+            saves_dir.mkdir(parents=True, exist_ok=True)
+            return jsonify({'files': []})
+        
+        files = [f.name for f in saves_dir.iterdir() if f.suffix == '.json']
+        return jsonify({'files': sorted(files)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/backtracking/save-graph', methods=['POST'])
+def save_backtracking_graph():
+    """Save a backtracking graph"""
+    try:
+        data = request.get_json()
+        filename = data.get('filename', '')
+        graph_data = data.get('data', {})
+        
+        if not filename:
+            return jsonify({'error': 'No filename provided'}), 400
+        
+        saves_dir = Path('algorithms/backtracking/SavedGraphs')
+        saves_dir.mkdir(parents=True, exist_ok=True)
+        
+        filepath = saves_dir / f"{filename}.json"
+        with open(filepath, 'w') as f:
+            json.dump(graph_data, f, indent=4)
+        
+        return jsonify({'success': True, 'filename': f"{filename}.json"})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/backtracking/load-graph/<filename>', methods=['GET'])
+def load_backtracking_graph(filename):
+    """Load a saved backtracking graph"""
+    try:
+        filepath = Path(f'algorithms/backtracking/SavedGraphs/{filename}')
+        if not filepath.exists():
+            return jsonify({'error': 'File not found'}), 404
+        
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+        
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/backtracking/solve', methods=['POST'])
+def solve_backtracking():
+    """Solve graph coloring using backtracking algorithm"""
+    try:
+        data = request.get_json()
+        graph = data.get('graph', {})
+        color_limit = data.get('color_limit', 4)
+        
+        if not graph:
+            return jsonify({'error': 'No graph provided'}), 400
+        
+        # Load colors
+        colors_path = Path('algorithms/backtracking/BackTracking/Colors/color.json')
+        if colors_path.exists():
+            with open(colors_path, 'r') as f:
+                color_data = json.load(f)
+                all_colors = color_data.get('all_colors', [])
+        else:
+            all_colors = ["Red", "Green", "Blue", "Yellow", "Orange", "Purple"]
+        
+        selected_colors = all_colors[:color_limit]
+        
+        # Create analytics and solver
+        analytics = PerformanceAnalytics()
+        solver = Backtracking(graph, selected_colors, analytics=analytics)
+        solution = solver.start_solving()
+        
+        return jsonify({
+            'success': solution is not None,
+            'solution': solution,
+            'analytics': {
+                'solution_found': analytics.solution_found,
+                'execution_time_ms': analytics.execution_time_ms,
+                'nodes_visited': analytics.nodes_visited,
+                'backtracks_count': analytics.backtracks_count
+            }
+        })
+    except Exception as e:
+        print(f"Error in backtracking solve: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':

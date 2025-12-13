@@ -66,12 +66,11 @@ class PopulationSpace:
         # print(self.calculate_fitness(parent_one))
         # print(self.calculate_fitness(parent_two))
         # print(self.calculate_fitness(child))
+        
         child_ind = Individual(child)
         return child_ind
 
-    def mutation(self,child_individual : 'Individual', general_belief):
-            # print(f"before: {child}")
-            
+    def mutation(self,child_individual : 'Individual', general_belief):            
             chromo = child_individual.chromosome
             available_colors = list(range(1,general_belief+1))  #influence the population space by constraining the range of colors
             vertex_index = random.randint(0, self.n_nodes - 1)
