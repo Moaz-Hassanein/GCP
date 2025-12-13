@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Coloring - Algorithm Selection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .algorithm-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .algorithm-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .algorithm-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            transition: height 0.3s ease;
+        }
+        
+        .algorithm-card:hover::before {
+            height: 100%;
+            opacity: 0.1;
+        }
+        
+        .backtracking-card::before {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .ca-card::before {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+        
+        .icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-12">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-bold text-white mb-4">
+                🎨 Graph Coloring Problem
+            </h1>
+            <p class="text-xl text-white opacity-90">
+                Choose your algorithm to solve the graph coloring challenge
+            </p>
+        </div>
+        
+        <!-- Algorithm Cards -->
+        <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            
+            <!-- Backtracking Algorithm Card -->
+            <div class="algorithm-card backtracking-card" onclick="window.location.href='/backtracking'">
+                <div class="icon">🔙</div>
+                <h2 class="text-3xl font-bold mb-4 text-gray-800">Backtracking</h2>
+                <p class="text-gray-600 mb-6">
+                    Classic exhaustive search algorithm that tries all possible combinations systematically
+                </p>
+                
+                <div class="features">
+                    <div class="feature-item">
+                        <span class="text-2xl mr-3">⚡</span>
+                        <span class="text-gray-700">Guaranteed optimal solution</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="text-2xl mr-3">📊</span>
+                        <span class="text-gray-700">Interactive graph builder</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="text-2xl mr-3">💾</span>
+                        <span class="text-gray-700">Save & load graphs</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="text-2xl mr-3">🎨</span>
+                        <span class="text-gray-700">Real-time color palette</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="text-2xl mr-3">📈</span>
+                        <span class="text-gray-700">Performance analytics</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <span class="inline-block px-4 py-2 bg-purple-600 text-white rounded-full font-semibold">
+                        Launch →
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Cultural Algorithm Card -->
+            <div class="algorithm-card ca-card" onclick="window.location.href='/cultural'">
+                <div class="icon">🧬</div>
+                <h2 class="text-3xl font-bold mb-4 text-gray-800">Cultural Algorithm</h2>
+                <p class="text-gray-600 mb-6">
+                    Advanced evolutionary approach inspired by cultural evolution and belief spaces
+                </p>
+                
+                <div class="features">
+                    <div class="feature-item">
+                        <span class="text-2xl mr-3">🚀</span>
+                        <span class="text-gray-700">Fast convergence</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="text-2xl mr-3">🔄</span>
+                        <span class="text-gray-700">Real-time visualization</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="text-2xl mr-3">📡</span>
+                        <span class="text-gray-700">Live evolution tracking</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="text-2xl mr-3">🎯</span>
+                        <span class="text-gray-700">Adaptive mutation</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="text-2xl mr-3">📈</span>
+                        <span class="text-gray-700">Generation charts</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <span class="inline-block px-4 py-2 bg-pink-600 text-white rounded-full font-semibold">
+                        Launch →
+                    </span>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Info Section -->
+        <div class="text-center mt-12 text-white opacity-80">
+            <p class="text-sm">
+                💡 Both algorithms solve the same problem using different approaches
+            </p>
+            <p class="text-xs mt-2">
+                Graph Coloring Problem: Assign colors to nodes so no adjacent nodes share the same color
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -9,12 +9,14 @@ if TYPE_CHECKING:
 class BeliefSpace:
     def __init__(self, initial_upper_bound, max_k, mutation_rate):
         self.general_belief = initial_upper_bound
-        self.group_metrics = {}  
+        self.group_metrics = {}  #curr_best , prev_best, stag_count, is_adapted
         self.MAX_K = max_k # maximum number of individuals to inject when rg is 0 / stagnants are recurring
         self.MUTATION_RATE = mutation_rate
 
+    # acceptance (the learning)
     def update_belief(self, best_indvidual: Individual) -> bool:
         new_belief = min(self.general_belief, best_indvidual.belief)
+        
         if(new_belief < self.general_belief):
             self.general_belief = new_belief
             return True
@@ -77,7 +79,7 @@ class BeliefSpace:
                     
                     metrics['is_adapted'] = True
                     
-            return group_improved
+        return group_improved
 
     def get_mutation_rate(self, default_rate, belief_g=None):
         if belief_g is not None and belief_g in self.group_metrics and self.group_metrics[belief_g]['is_adapted']:
