@@ -175,14 +175,14 @@ class CulturalAlgorithmWebSocket(CulturalAlgorithm):
             
             current_best = self.population[0]
             
-            valid_solutions = [ind for ind in self.population if ind.fitness == 0]
+            # valid_solutions = [ind for ind in self.population if ind.fitness == 0]
         
-            if valid_solutions:
-                # Among valid solutions, pick the one with fewest colors
-                current_best = min(valid_solutions, key=lambda x: x.belief)
-            else:
-                # If no valid solution yet, use best fitness
-                current_best = self.population[0]
+            # if valid_solutions:
+            #     # Among valid solutions, pick the one with fewest colors
+            #     current_best = min(valid_solutions, key=lambda x: x.belief)
+            # else:
+            #     # If no valid solution yet, use best fitness
+            #     current_best = self.population[0]
 
             # Emit generation update via Socket.IO with throttling for large graphs
             # For large graphs, emit less frequently to reduce network overhead
@@ -203,8 +203,8 @@ class CulturalAlgorithmWebSocket(CulturalAlgorithm):
                 })
             
             # Stop if optimal solution found
-            # if current_best.fitness == 0:
-            #     break
+            if current_best.fitness == 0:
+                break
             
             
 

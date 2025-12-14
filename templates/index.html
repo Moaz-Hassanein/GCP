@@ -421,11 +421,23 @@
                 <!-- Fitness Chart Tab -->
                 <div id="content-fitness" class="tab-content">
                     <canvas id="modal-fitness-chart" style="max-height: 400px;"></canvas>
+                    <div style="margin-top: 1rem; text-align: center;">
+                        <button onclick="saveModalChart('fitness')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <span>💾</span>
+                            <span>Save Fitness Chart</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Belief Chart Tab -->
                 <div id="content-belief" class="tab-content" style="display: none;">
                     <canvas id="modal-belief-chart" style="max-height: 400px;"></canvas>
+                    <div style="margin-top: 1rem; text-align: center;">
+                        <button onclick="saveModalChart('belief')" class="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <span>💾</span>
+                            <span>Save Belief Chart</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Statistics Tab -->
@@ -1495,6 +1507,56 @@
             document.getElementById(`content-${tabName}`).style.display = 'block';
         }
         
+        function saveModalChart(chartType) {
+            const chart = chartType === 'fitness' ? modalFitnessChart : modalBeliefChart;
+            if (!chart) {
+                alert('Chart not available');
+                return;
+            }
+            
+            // Add white background plugin
+            const whiteBackgroundPlugin = {
+                id: 'whiteBackground',
+                beforeDraw: (chart) => {
+                    const ctx = chart.ctx;
+                    ctx.save();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, chart.width, chart.height);
+                    ctx.restore();
+                }
+            };
+            
+            // Temporarily register plugin, render, then remove
+            Chart.register(whiteBackgroundPlugin);
+            chart.update();
+            
+            const imageData = chart.toBase64Image();
+            
+            Chart.unregister(whiteBackgroundPlugin);
+            chart.update();
+            
+            fetch('/api/save-chart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    image: imageData, 
+                    type: chartType === 'fitness' ? 'modal_fitness_chart' : 'modal_belief_chart'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`✅ ${chartType === 'fitness' ? 'Fitness' : 'Belief'} chart saved to: ${data.path}`);
+                } else {
+                    alert('❌ Failed to save chart: ' + data.error);
+                }
+            })
+            .catch(err => {
+                console.error('Error saving chart:', err);
+                alert('❌ Error saving chart');
+            });
+        }
+        
         function createModalCharts() {
             // Destroy existing charts if any
             if (modalFitnessChart) modalFitnessChart.destroy();
@@ -1547,17 +1609,31 @@
                 type: 'line',
                 data: {
                     labels: generationData.generations,
-                    datasets: [{
-                        label: 'General Belief (Upper Bound)',
-                        data: generationData.belief,
-                        borderColor: '#8b5cf6',
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointHoverRadius: 6
-                    }]
+                    datasets: [
+                        {
+                            label: 'General Belief (Upper Bound)',
+                            data: generationData.belief,
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointHoverRadius: 6,
+                            borderDash: [5, 5]
+                        },
+                        {
+                            label: 'Colors Used (Best Solution)',
+                            data: generationData.colors_used,
+                            borderColor: '#ec4899',
+                            backgroundColor: 'rgba(236, 72, 153, 0.2)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointHoverRadius: 6
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -1565,7 +1641,7 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: 'Belief Constraint Evolution',
+                            text: 'Belief Constraint vs Colors Used',
                             font: { size: 18, weight: 'bold' }
                         },
                         legend: { display: true, position: 'top' }

@@ -60,15 +60,15 @@ class CulturalAlgorithm: # orchestrator
        total_time = end_time - start_time
 
       # --- Final Metrics Report ---
-       valid_solutions = [ind for ind in self.population if ind.fitness == 0]
+    #    valid_solutions = [ind for ind in self.population if ind.fitness == 0]
        
-       if valid_solutions:
-           # Among valid solutions, pick the one with fewest colors
-           final_best = min(valid_solutions, key=lambda x: x.belief)
-           print(f"\n🎯 Color-optimized solution selected from {len(valid_solutions)} valid solution(s)")
-       else:
+    #    if valid_solutions:
+    #        # Among valid solutions, pick the one with fewest colors
+    #        final_best = min(valid_solutions, key=lambda x: x.belief)
+    #        print(f"\n🎯 Color-optimized solution selected from {len(valid_solutions)} valid solution(s)")
+    #    else:
            # If no valid solution, use best fitness
-           final_best = min(self.population, key=lambda x: x.fitness)
+       final_best = min(self.population, key=lambda x: x.fitness)
        
        print("\n--- CA Optimization Finished ---")
        print(f"1. Final Chromatic Number (Belief): {final_best.belief}")
