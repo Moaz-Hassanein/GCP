@@ -60,7 +60,16 @@ class CulturalAlgorithm: # orchestrator
        total_time = end_time - start_time
 
       # --- Final Metrics Report ---
-       final_best = min(self.population, key=lambda x: x.fitness)
+       valid_solutions = [ind for ind in self.population if ind.fitness == 0]
+       
+       if valid_solutions:
+           # Among valid solutions, pick the one with fewest colors
+           final_best = min(valid_solutions, key=lambda x: x.belief)
+           print(f"\n🎯 Color-optimized solution selected from {len(valid_solutions)} valid solution(s)")
+       else:
+           # If no valid solution, use best fitness
+           final_best = min(self.population, key=lambda x: x.fitness)
+       
        print("\n--- CA Optimization Finished ---")
        print(f"1. Final Chromatic Number (Belief): {final_best.belief}")
        print(f"2. Final Minimum Conflicts (Fitness): {final_best.fitness}")
@@ -92,7 +101,7 @@ class CulturalAlgorithm: # orchestrator
             print(f"belief changed? {belief_changed}")
             group_improved = self.belief_space.process_groups(self.population, self.pop_space)
 
-            if not group_improved:
+            if not group_improved and not belief_changed:
                 T += 1
             else:
                 T = 0
@@ -112,6 +121,7 @@ class CulturalAlgorithm: # orchestrator
                 self.belief_space.general_belief, # for mutation
                 current_mutation_rate #mutation factor
             )
+         
 
             #re evaluate just to make sure that every individual has calculated fitness
             for ind in new_individuals:
@@ -121,7 +131,7 @@ class CulturalAlgorithm: # orchestrator
             combined = self.population + new_individuals
             combined.sort(key=lambda x: x.fitness)
             self.population = combined[:self.pop_size]
-        
+
 
             # Monitoring 
             if T > 0:

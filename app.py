@@ -109,7 +109,17 @@ class CulturalAlgorithmWebSocket(CulturalAlgorithm):
         end_time = time.time()
         total_time = end_time - start_time
         
-        final_best = min(self.population, key=lambda x: x.fitness)
+        # Prioritize valid solutions with fewer colors
+        valid_solutions = [ind for ind in self.population if ind.fitness == 0]
+        
+        if valid_solutions:
+            # Among valid solutions, pick the one with fewest colors
+            final_best = min(valid_solutions, key=lambda x: x.belief)
+            print(f"\n🎯 [FINAL] Color-optimized solution: {final_best.belief} colors (from {len(valid_solutions)} valid solutions)")
+        else:
+            # If no valid solution, use best fitness
+            final_best = min(self.population, key=lambda x: x.fitness)
+            print(f"\n[FINAL] Best fitness: {final_best.fitness}, Colors: {final_best.belief}")
         
         # Emit completion event
         socketio.emit('simulation_complete', {
@@ -165,6 +175,15 @@ class CulturalAlgorithmWebSocket(CulturalAlgorithm):
             
             current_best = self.population[0]
             
+            valid_solutions = [ind for ind in self.population if ind.fitness == 0]
+        
+            if valid_solutions:
+                # Among valid solutions, pick the one with fewest colors
+                current_best = min(valid_solutions, key=lambda x: x.belief)
+            else:
+                # If no valid solution yet, use best fitness
+                current_best = self.population[0]
+
             # Emit generation update via Socket.IO with throttling for large graphs
             # For large graphs, emit less frequently to reduce network overhead
             is_large_graph = self.pop_space.n_nodes > 100
@@ -184,9 +203,11 @@ class CulturalAlgorithmWebSocket(CulturalAlgorithm):
                 })
             
             # Stop if optimal solution found
-            if current_best.fitness == 0:
-                break
+            # if current_best.fitness == 0:
+            #     break
             
+            
+
             self.generation += 1
             
             # Adaptive sleep for visualization

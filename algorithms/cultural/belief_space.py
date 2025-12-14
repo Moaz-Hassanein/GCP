@@ -67,6 +67,7 @@ class BeliefSpace:
             else:
                 metrics['stagnant_count'] += 1
 
+
                 if metrics['stagnant_count'] > 5 and not metrics['is_adapted']:
                     rg = self.calculate_rg(current_best_fitness, prev_best_fitness)
                     Kg = self.calculate_Kg(rg, belief_group)
