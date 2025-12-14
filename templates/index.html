@@ -90,6 +90,76 @@
             background: #ffffff;
             border-right: 1px solid #e2e8f0;
         }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 0;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .tab-button.active {
+            color: #6366f1;
+            border-bottom-color: #6366f1;
+        }
+        
+        .tab-button:hover {
+            color: #4f46e5;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 <body class="font-sans">
@@ -97,7 +167,7 @@
     <div class="flex h-screen">
         
         <!-- Left Sidebar - Controls -->
-        <div class="sidebar w-80 p-6 overflow-y-auto">
+        <div class="sidebar w-[420px] p-6 overflow-y-auto">
             
             <!-- Header -->
             <div class="mb-8">
@@ -221,6 +291,24 @@
                     </label>
                     
                     <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="random-selection" 
+                               class="w-4 h-4 rounded border-slate-300 bg-white text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-sm text-slate-700">
+                            <span class="font-semibold">Random Selection</span>
+                            <span class="block text-xs text-slate-500 mt-1">Use random parent selection instead of tournament</span>
+                        </span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="focused-mutation" 
+                               class="w-4 h-4 rounded border-slate-300 bg-white text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-sm text-slate-700">
+                            <span class="font-semibold">Focused Mutation</span>
+                            <span class="block text-xs text-slate-500 mt-1">Mutate only conflicted nodes for faster convergence</span>
+                        </span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-3 cursor-pointer">
                         <input type="checkbox" id="fixed-seed" 
                                class="w-4 h-4 rounded border-slate-300 bg-white text-indigo-600 focus:ring-indigo-500">
                         <span class="text-sm text-slate-700">
@@ -311,6 +399,52 @@
             
         </div>
         
+    </div>
+    
+    <!-- Results Modal -->
+    <div id="results-modal" class="modal-overlay">
+        <div class="modal-content" style="width: 900px;">
+            <!-- Modal Header -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 16px 16px 0 0;">
+                <h2 class="text-2xl font-bold text-white text-center">🎉 Simulation Complete!</h2>
+            </div>
+            
+            <!-- Tab Navigation -->
+            <div style="display: flex; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                <button id="tab-fitness" class="tab-button active" onclick="switchTab('fitness')">📈 Fitness Chart</button>
+                <button id="tab-belief" class="tab-button" onclick="switchTab('belief')">🎯 Belief Chart</button>
+                <button id="tab-stats" class="tab-button" onclick="switchTab('stats')">📊 Statistics</button>
+            </div>
+            
+            <!-- Tab Content -->
+            <div style="padding: 2rem;">
+                <!-- Fitness Chart Tab -->
+                <div id="content-fitness" class="tab-content">
+                    <canvas id="modal-fitness-chart" style="max-height: 400px;"></canvas>
+                </div>
+                
+                <!-- Belief Chart Tab -->
+                <div id="content-belief" class="tab-content" style="display: none;">
+                    <canvas id="modal-belief-chart" style="max-height: 400px;"></canvas>
+                </div>
+                
+                <!-- Statistics Tab -->
+                <div id="content-stats" class="tab-content" style="display: none;">
+                    <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px;">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">📋 Simulation Parameters & Results</h3>
+                        <div id="stats-container"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Footer - Action Buttons -->
+            <div style="padding: 1.5rem; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; gap: 1rem; justify-content: flex-end; border-radius: 0 0 16px 16px;">
+                <button onclick="closeResultsModal()" class="px-6 py-2.5 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 transition" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span>✕</span>
+                    <span>Close</span>
+                </button>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -470,10 +604,16 @@
             document.getElementById('stop-btn').classList.add('hidden');
             document.getElementById('download-btn').classList.remove('hidden');
             
-            // Show completion message
+            // Store simulation results for modal
+            window.simulationResults = {
+                ...data,
+                parameters: currentParams
+            };
+            
+            // Show results modal after a brief delay
             setTimeout(() => {
-                alert(`Simulation Complete!\n\nFitness: ${data.best_fitness}\nColors Used: ${data.colors_used}\nGenerations: ${data.total_generations}\nTime: ${data.execution_time.toFixed(2)}s`);
-            }, 100);
+                showResultsModal(data);
+            }, 300);
         });
         
         socket.on('simulation_started', (data) => {
@@ -991,7 +1131,9 @@
                 max_k: parseInt(document.getElementById('max-k').value),
                 graph_name: document.getElementById('graph-select').value,
                 fixed_seed: document.getElementById('fixed-seed').checked,
-                use_estimation_phase: document.getElementById('use-estimation-phase').checked
+                use_estimation_phase: document.getElementById('use-estimation-phase').checked,
+                random_selection: document.getElementById('random-selection').checked ? 1 : 0,
+                focused_mutation: document.getElementById('focused-mutation').checked ? 1 : 0
             };
             
             // Update current parameters while preserving num_nodes and num_edges
@@ -1000,6 +1142,10 @@
             currentParams.mutation_rate = params.mutation_rate;
             currentParams.max_k = params.max_k;
             currentParams.graph_name = params.graph_name;
+            currentParams.use_estimation_phase = params.use_estimation_phase;
+            currentParams.random_selection = params.random_selection;
+            currentParams.focused_mutation = params.focused_mutation;
+            currentParams.fixed_seed = params.fixed_seed;
             
             console.log('🚀 Starting simulation with configuration:');
             console.log('  - Population Size:', params.pop_size);
@@ -1300,6 +1446,221 @@
                 statusEl.classList.remove('hidden');
                 setTimeout(() => statusEl.classList.add('hidden'), 3000);
             }
+        }
+        
+        // ============ Results Modal Functions ============
+        
+        let modalFitnessChart = null;
+        let modalBeliefChart = null;
+        let currentModalTab = 'fitness';
+        
+        function showResultsModal(data) {
+            const modal = document.getElementById('results-modal');
+            modal.classList.add('active');
+            
+            // Create modal charts
+            createModalCharts();
+            
+            // Populate statistics
+            populateStatistics(data);
+            
+            // Reset to first tab
+            switchTab('fitness');
+        }
+        
+        function closeResultsModal() {
+            const modal = document.getElementById('results-modal');
+            modal.classList.remove('active');
+            
+            // Destroy modal charts to free memory
+            if (modalFitnessChart) {
+                modalFitnessChart.destroy();
+                modalFitnessChart = null;
+            }
+            if (modalBeliefChart) {
+                modalBeliefChart.destroy();
+                modalBeliefChart = null;
+            }
+        }
+        
+        function switchTab(tabName) {
+            currentModalTab = tabName;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            document.getElementById(`content-${tabName}`).style.display = 'block';
+        }
+        
+        function createModalCharts() {
+            // Destroy existing charts if any
+            if (modalFitnessChart) modalFitnessChart.destroy();
+            if (modalBeliefChart) modalBeliefChart.destroy();
+            
+            // Create Fitness Chart
+            const fitnessCtx = document.getElementById('modal-fitness-chart').getContext('2d');
+            modalFitnessChart = new Chart(fitnessCtx, {
+                type: 'line',
+                data: {
+                    labels: generationData.generations,
+                    datasets: [{
+                        label: 'Best Fitness',
+                        data: generationData.fitness,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Fitness Evolution Over Generations',
+                            font: { size: 18, weight: 'bold' }
+                        },
+                        legend: { display: true, position: 'top' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Fitness (Conflicts)' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Generation' }
+                        }
+                    }
+                }
+            });
+            
+            // Create Belief Chart
+            const beliefCtx = document.getElementById('modal-belief-chart').getContext('2d');
+            modalBeliefChart = new Chart(beliefCtx, {
+                type: 'line',
+                data: {
+                    labels: generationData.generations,
+                    datasets: [{
+                        label: 'General Belief (Upper Bound)',
+                        data: generationData.belief,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Belief Constraint Evolution',
+                            font: { size: 18, weight: 'bold' }
+                        },
+                        legend: { display: true, position: 'top' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Number of Colors' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Generation' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function populateStatistics(data) {
+            const params = window.simulationResults?.parameters || currentParams;
+            const statsContainer = document.getElementById('stats-container');
+            
+            const successStatus = data.status === 'success' ? 
+                '<span style="color: #10b981; font-weight: bold;">✓ Success</span>' : 
+                '<span style="color: #f59e0b; font-weight: bold;">⚠ Completed (with conflicts)</span>';
+            
+            const epStatus = params.use_estimation_phase ? 
+                '<span style="color: #10b981;">✓ Enabled</span>' : 
+                '<span style="color: #94a3b8;">✗ Disabled</span>';
+            
+            const seedStatus = params.fixed_seed ? 
+                '<span style="color: #10b981;">✓ Fixed (42)</span>' : 
+                '<span style="color: #94a3b8;">○ Random</span>';
+            
+            const selectionStatus = (params.random_selection === 1) ? 
+                '<span style="color: #3b82f6;">🎲 Random</span>' : 
+                '<span style="color: #10b981;">🏆 Tournament</span>';
+            
+            const mutationStatus = (params.focused_mutation === 1) ? 
+                '<span style="color: #f59e0b;">🎯 Focused</span>' : 
+                '<span style="color: #10b981;">🔀 Normal</span>';
+            
+            statsContainer.innerHTML = `
+                <div class="stat-item">
+                    <span class="font-semibold text-slate-700">🎯 Final Status:</span>
+                    <span>${successStatus}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="font-semibold text-slate-700">👥 Population Size:</span>
+                    <span class="text-slate-900 font-medium">${params.pop_size}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="font-semibold text-slate-700">🔬 Estimation Phase:</span>
+                    <span>${epStatus}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="font-semibold text-slate-700">🎯 Parent Selection:</span>
+                    <span>${selectionStatus}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="font-semibold text-slate-700">🧬 Mutation Type:</span>
+                    <span>${mutationStatus}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="font-semibold text-slate-700">🎲 Random Seed:</span>
+                    <span>${seedStatus}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="font-semibold text-slate-700">📊 Mutation Rate:</span>
+                    <span class="text-slate-900 font-medium">${params.mutation_rate}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="font-semibold text-slate-700">⏸️ Max Stagnation:</span>
+                    <span class="text-slate-900 font-medium">${params.max_stagnation}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="font-semibold text-slate-700">🎨 Max Colors (k):</span>
+                    <span class="text-slate-900 font-medium">${params.max_k}</span>
+                </div>
+                <div class="stat-item" style="background: #f0fdf4; margin: 0.5rem -0.75rem -0.75rem; padding: 1rem 0.75rem; border-radius: 0 0 12px 12px;">
+                    <span class="font-semibold text-slate-700">📊 Best Fitness:</span>
+                    <span class="text-2xl font-bold" style="color: ${data.best_fitness === 0 ? '#10b981' : '#f59e0b'};">${data.best_fitness}</span>
+                </div>
+                <div class="stat-item" style="background: #faf5ff; margin: 0.5rem -0.75rem -0.75rem; padding: 1rem 0.75rem; border-radius: 0 0 12px 12px;">
+                    <span class="font-semibold text-slate-700">🎨 Colors Used:</span>
+                    <span class="text-2xl font-bold text-purple-600">${data.colors_used}</span>
+                </div>
+                <div class="stat-item" style="background: #eff6ff; margin: 0.5rem -0.75rem -0.75rem; padding: 1rem 0.75rem; border-radius: 0 0 12px 12px;">
+                    <span class="font-semibold text-slate-700">🔄 Total Generations:</span>
+                    <span class="text-2xl font-bold text-blue-600">${data.total_generations}</span>
+                </div>
+                <div class="stat-item" style="background: #fef3c7; margin: 0.5rem -0.75rem -0.75rem; padding: 1rem 0.75rem; border-radius: 0 0 12px 12px;">
+                    <span class="font-semibold text-slate-700">⏱️ Execution Time:</span>
+                    <span class="text-2xl font-bold text-amber-600">${data.execution_time.toFixed(3)}s</span>
+                </div>
+            `;
         }
     </script>
     

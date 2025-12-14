@@ -8,14 +8,18 @@ import time
 class CulturalAlgorithm: # orchestrator
     def __init__(self, pop_size=100, max_stagnation_tries=50, 
                  max_k=10,mutation_rate=0.1, mutation_increase_factor=2.0, 
-                 graph_path="data\\sample_graphs\\graph_two", use_estimation_phase=True):
+                 graph_path="data\\sample_graphs\\graph_two", use_estimation_phase=True,
+                 random_selection=0, focused_mutation=0, fixed_seed=False):
        
         self.pop_size = pop_size
         self.max_stagnation_tries = max_stagnation_tries
         self.initial_muation_rate = mutation_rate
         self.use_estimation_phase = use_estimation_phase
+        self.random_selection = random_selection
+        self.focused_mutation = focused_mutation
+        self.fixed_seed = fixed_seed
 
-        self.pop_space = PopulationSpace(self.pop_size, graph_path)
+        self.pop_space = PopulationSpace(self.pop_size, graph_path, random_selection, focused_mutation)
         self.initial_upper_bound = self.pop_space.n_nodes # safe upper bound initialization
         self.belief_space = BeliefSpace(self.initial_upper_bound, max_k, mutation_increase_factor)
         self.population = []
@@ -23,6 +27,12 @@ class CulturalAlgorithm: # orchestrator
 
     def run_ca(self):
        start_time = time.time()
+
+       # Set random seed for reproducible initial population
+       if self.fixed_seed:
+           import random
+           random.seed(42)
+           print("[Fixed Seed] Using seed 42 for reproducible initial population")
 
        # Use Estimation Phase or Random Initialization based on user choice
        if self.use_estimation_phase:

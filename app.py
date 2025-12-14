@@ -40,15 +40,27 @@ class CulturalAlgorithmWebSocket(CulturalAlgorithm):
     
     def __init__(self, pop_size=100, max_stagnation_tries=50, max_k=10,
                  mutation_rate=0.1, mutation_increase_factor=2.0, 
-                 graph_path="data/sample_graphs/graph_two", use_estimation_phase=True):
+                 graph_path="data/sample_graphs/graph_two", use_estimation_phase=True,
+                 random_selection=0, focused_mutation=0, fixed_seed=False):
         super().__init__(pop_size, max_stagnation_tries, max_k, 
-                        mutation_rate, mutation_increase_factor, graph_path, use_estimation_phase)
+                        mutation_rate, mutation_increase_factor, graph_path, use_estimation_phase,
+                        random_selection, focused_mutation, fixed_seed)
         self.generation = 0
         self.should_stop = False
         
     def run_ca_with_events(self):
         """Run CA with real-time Socket.IO events"""
         start_time = time.time()
+        
+        print(f"\n{'='*60}")
+        print(f"[DEBUG] Fixed Seed Mode: {'ENABLED (seed=42)' if self.fixed_seed else 'DISABLED (random)'}")
+        print(f"{'='*60}")
+        
+        # Set random seed IMMEDIATELY before population initialization
+        if self.fixed_seed:
+            import random
+            random.seed(42)
+            print("[DEBUG] ✅ Seed 42 applied RIGHT NOW - before population creation")
         
         # Use Estimation Phase or Random Initialization based on user choice
         if self.use_estimation_phase:
@@ -63,6 +75,18 @@ class CulturalAlgorithmWebSocket(CulturalAlgorithm):
                 self.pop_space.calculate_fitness(ind)
         
         best_initial = min(self.population, key=lambda x: x.fitness)
+        
+        # Debug: Print initial population sample for seed verification
+        print(f"[DEBUG] Initial Population Created:")
+        print(f"  - Population Size: {len(self.population)}")
+        print(f"  - Best Initial Fitness: {best_initial.fitness}")
+        print(f"  - Best Initial Colors Used: {best_initial.belief}")
+        print(f"  - First Individual Chromosome (first 10 genes): {best_initial.chromosome[:10]}")
+        if len(self.population) >= 3:
+            print(f"  - Second Individual (first 10 genes): {self.population[1].chromosome[:10]}")
+            print(f"  - Third Individual (first 10 genes): {self.population[2].chromosome[:10]}")
+        print(f"[DEBUG] If seed is working, these values should be IDENTICAL across runs with fixed_seed=ON")
+        print(f"{'='*60}\n")
         
         # Emit initialization event
         socketio.emit('generation_update', {
@@ -472,17 +496,14 @@ def handle_start_simulation(data):
         graph_name = data.get('graph_name', 'graph_two')
         fixed_seed = data.get('fixed_seed', False)
         use_estimation_phase = data.get('use_estimation_phase', True)
+        random_selection = int(data.get('random_selection', 0))  # 0 = tournament, 1 = random
+        focused_mutation = int(data.get('focused_mutation', 0))  # 0 = normal, 1 = focused
         graph_path = f"data/sample_graphs/{graph_name}"
-        
-        # Set random seed if fixed_seed is enabled
-        if fixed_seed:
-            import random
-            random.seed(42)
-            print(f"Using fixed seed (42) for reproducible results")
         
         print(f"Starting simulation with: pop_size={pop_size}, max_stagnation={max_stagnation}, "
               f"mutation_rate={mutation_rate}, max_k={max_k}, graph={graph_name}, fixed_seed={fixed_seed}, "
-              f"use_estimation_phase={use_estimation_phase}")
+              f"use_estimation_phase={use_estimation_phase}, random_selection={random_selection}, "
+              f"focused_mutation={focused_mutation}")
         
         # Create algorithm instance
         current_simulation = CulturalAlgorithmWebSocket(
@@ -491,7 +512,10 @@ def handle_start_simulation(data):
             max_k=max_k,
             mutation_rate=mutation_rate,
             graph_path=graph_path,
-            use_estimation_phase=use_estimation_phase
+            use_estimation_phase=use_estimation_phase,
+            random_selection=random_selection,
+            focused_mutation=focused_mutation,
+            fixed_seed=fixed_seed
         )
         
         simulation_running = True

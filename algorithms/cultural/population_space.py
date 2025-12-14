@@ -7,10 +7,12 @@ from algorithms.cultural.individual import Individual
 
 
 class PopulationSpace:
-    def __init__(self, pop_size, path):
+    def __init__(self, pop_size, path, random_selection=0, focused_mutation=0):
         self.random_graph = GraphGenerator(path)
         self.pop_size = pop_size
         self.n_nodes = self.random_graph.n_nodes
+        self.random_selection = random_selection  # 0 = tournament, 1 = random
+        self.focused_mutation = focused_mutation  # 0 = normal mutation, 1 = focused mutation
         
     def create_chromosome(self, max_colors):
         chromosome = [random.randint(1, max_colors) for _ in range(self.n_nodes)]
@@ -58,6 +60,12 @@ class PopulationSpace:
         return parent_one, parent_two
     
 
+    def selection_random(self, population: List['Individual']):
+        parent_one = random.choice(population)
+        parent_two = random.choice(population)
+        return parent_one, parent_two
+    
+
     def crossover(self, parent_one : 'Individual', parent_two : 'Individual'):
         n = len(parent_one.chromosome)
         crosspoint = random.randint(0, n-2)
@@ -78,16 +86,44 @@ class PopulationSpace:
 
             return child_individual
     
+    def apply_focused_mutation(self,child_individual : 'Individual', general_belief):
+        chromo = child_individual.chromosome
+
+        conflicted_nodes_indices = set()
+        for u, adj in self.random_graph.graph.items():
+            u_color = chromo[u - 1]
+            for v in adj:
+                if v > u and u_color == chromo[v-1]:
+                    conflicted_nodes_indices.add(u - 1)
+                    conflicted_nodes_indices.add(v - 1)
+
+        if not conflicted_nodes_indices:
+            return self.mutation(child_individual, general_belief)
+        
+        node_index_to_mutate = random.choice(list(conflicted_nodes_indices))
+        available_colors = list(range(1, general_belief + 1))
+
+        chromo[node_index_to_mutate] = random.choice(available_colors)
+
     def perform_variation(self, population, pop_size, general_belief, muation_rate):
         new_pop = []
         num_children_to_generate = pop_size
 
         for _ in range(num_children_to_generate):
-            p1,p2 = self.selection(population)
+            # Choose selection method based on random_selection parameter
+            if self.random_selection == 1:
+                p1, p2 = self.selection_random(population)
+            else:
+                p1, p2 = self.selection(population)
+            
             child = self.crossover(p1,p2)
 
             if random.random() < muation_rate:
-                self.mutation(child, general_belief)
+                # Choose mutation method based on focused_mutation parameter
+                if self.focused_mutation == 1:
+                    self.apply_focused_mutation(child, general_belief)
+                else:
+                    self.mutation(child, general_belief)
             
             self.calculate_fitness(child)
             new_pop.append(child)
