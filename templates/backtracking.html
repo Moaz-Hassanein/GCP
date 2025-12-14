@@ -336,6 +336,38 @@
             document.getElementById('limit-display').textContent = value;
         }
         
+        // Check if graph is connected using BFS
+        function isGraphConnected(graph) {
+            if (Object.keys(graph).length === 0) return true;
+            
+            const allNodes = new Set();
+            Object.keys(graph).forEach(node => {
+                allNodes.add(node);
+                graph[node].forEach(neighbor => allNodes.add(neighbor));
+            });
+            
+            if (allNodes.size === 0) return true;
+            
+            const startNode = Array.from(allNodes)[0];
+            const visited = new Set();
+            const queue = [startNode];
+            visited.add(startNode);
+            
+            while (queue.length > 0) {
+                const current = queue.shift();
+                const neighbors = graph[current] || [];
+                
+                neighbors.forEach(neighbor => {
+                    if (!visited.has(neighbor)) {
+                        visited.add(neighbor);
+                        queue.push(neighbor);
+                    }
+                });
+            }
+            
+            return visited.size === allNodes.size;
+        }
+        
         document.getElementById('limit-scale').addEventListener('input', updateLimitDisplay);
         
         // Toggle color limit visibility based on algorithm type
@@ -624,15 +656,31 @@
             }
             
             resetColors();
-            logStatus('Solving...');
             
-            const limit = parseInt(document.getElementById('limit-scale').value);
-            const algorithmType = document.querySelector('input[name="algorithm-type"]:checked').value;
-            
+            // Check if graph is connected
             const graphData = {};
             Object.keys(adjList).forEach(key => {
                 graphData[key] = adjList[key].map(String);
             });
+            
+            if (!isGraphConnected(graphData)) {
+                const proceed = confirm(
+                    '⚠️ WARNING: Disconnected Graph Detected!\n\n' +
+                    'This graph has multiple disconnected components. ' +
+                    'The algorithm will still work, but each component will be colored independently.\n\n' +
+                    'Do you want to proceed?'
+                );
+                if (!proceed) {
+                    logStatus('Solving cancelled - disconnected graph');
+                    return;
+                }
+                logStatus('⚠️ Solving disconnected graph...');
+            } else {
+                logStatus('Solving...');
+            }
+            
+            const limit = parseInt(document.getElementById('limit-scale').value);
+            const algorithmType = document.querySelector('input[name="algorithm-type"]:checked').value;
             
             try {
                 const response = await fetch('/api/backtracking/solve', {
